@@ -1,10 +1,12 @@
-import { observable, autorun } from 'mobx'
+import { observable, autorun, computed } from 'mobx'
 
 import { MacOS } from '../cursors'
-import { css } from '../utils'
+import { css, cursorFromPoint } from '../utils'
 import autobind from 'autobind-decorator'
 
-export interface CursorIcon {
+export type CursorIcon = (
+  cursor: Cursor
+) => {
   url: string
   size: number
   style?: string
@@ -32,6 +34,13 @@ export class Cursor {
     document.body.appendChild(this.canvas)
   }
 
+  @computed
+  public get type() {
+    const cursor = cursorFromPoint(this.x, this.y)
+
+    return cursor
+  }
+
   public destroy() {
     this.renderDisposer()
   }
@@ -45,7 +54,7 @@ export class Cursor {
   }
 
   private render() {
-    const icon = MacOS
+    const icon = MacOS(this)
 
     const style = css`
       position: fixed;
@@ -55,7 +64,6 @@ export class Cursor {
       left: ${this.x}px;
       background-image: url('${icon.url}');
       background-repeat: no-repeat;
-      background-size: contain;
       opacity: ${this.visible ? 1 : 0};
 
       pointer-events: none;
