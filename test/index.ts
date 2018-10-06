@@ -1,6 +1,6 @@
 import { CursorCapture } from '../src/CursorCapture'
 
 const cursorCapture = new CursorCapture({
-  hideWhenNotLocked: false
+  boundaries: []
 })
 ;(window as any).cursorCapture = cursorCapture

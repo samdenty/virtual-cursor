@@ -22,7 +22,7 @@ export class CursorCapture {
     }: ICursorCapture = {} as any
   ) {
     this.cursor = cursor
-    this.boundaries = new Set(defaultBoundaries)
+    this.boundaries = new Set(boundaries)
     this.hideWhenNotLocked = hideWhenNotLocked
 
     // Event listeners
