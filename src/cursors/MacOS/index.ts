@@ -29,9 +29,10 @@ export const MacOS: CursorIcon = cursor => {
 
   return {
     url: cursors[type],
-    style: css`
-      background-position: ${type === 'default' ? '-2px -1px' : null};
-    `,
+    // Adjust targeting
+    // style: css`
+    //   background-position: ${type === 'default' ? '-2px -1px' : null};
+    // `,
     size: 32
   }
 }

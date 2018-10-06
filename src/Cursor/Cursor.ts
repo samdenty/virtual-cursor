@@ -1,7 +1,7 @@
 import { observable, autorun, computed } from 'mobx'
 
 import { MacOS } from '../cursors'
-import { css, cursorFromPoint } from '../utils'
+import { css, cursorFromPoint, zoomAdjustedSize } from '../utils'
 import autobind from 'autobind-decorator'
 
 export type CursorIcon = (
@@ -58,12 +58,13 @@ export class Cursor {
 
     const style = css`
       position: fixed;
-      height: ${icon.size}px;
-      width: ${icon.size}px;
+      height: ${zoomAdjustedSize(icon.size)}px;
+      width: ${zoomAdjustedSize(icon.size)}px;
       top: ${this.y}px;
       left: ${this.x}px;
       background-image: url('${icon.url}');
       background-repeat: no-repeat;
+      background-size: contain;
       opacity: ${this.visible ? 1 : 0};
 
       pointer-events: none;
