@@ -1,6 +1,7 @@
 import autobind from 'autobind-decorator'
 import { Cursor } from '../Cursor'
 import { Plugin, defaultPlugins } from './Plugin'
+import { isValidEvent } from '../utils'
 
 export interface ICursorCapture {
   cursor?: Cursor
@@ -57,6 +58,8 @@ export class CursorCapture {
   }
 
   private onMouseMove(event: MouseEvent) {
+    if (!isValidEvent(event)) return
+
     const prevX = this.cursor.x
     const prevY = this.cursor.y
 
@@ -81,6 +84,8 @@ export class CursorCapture {
   }
 
   private onMouseDown(event: MouseEvent) {
+    if (!isValidEvent(event)) return
+
     event.preventDefault()
     event.stopPropagation()
 
@@ -94,6 +99,8 @@ export class CursorCapture {
   }
 
   private onMouseUp(event: MouseEvent) {
+    if (!isValidEvent(event)) return
+
     // Plugin system
     for (const plugin of this.plugins) {
       if (!plugin.mouseUp) continue

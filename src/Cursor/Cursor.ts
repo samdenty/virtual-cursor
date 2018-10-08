@@ -1,7 +1,12 @@
 import { observable, autorun, computed } from 'mobx'
 
 import { MacOS } from '../cursors'
-import { css, cursorFromPoint, zoomAdjustedSize } from '../utils'
+import {
+  css,
+  cursorFromPoint,
+  zoomAdjustedSize,
+  syntheticEvents
+} from '../utils'
 import autobind from 'autobind-decorator'
 
 export type CursorIcon = (
@@ -15,7 +20,7 @@ export type CursorIcon = (
 @autobind
 export class Cursor {
   public canvas = document.createElement('canvas')
-  private renderDisposer = autorun(() => this.render())
+  private disposeRenderer = autorun(() => this.render())
 
   @observable
   public visible: boolean
@@ -49,7 +54,7 @@ export class Cursor {
   }
 
   public destroy() {
-    this.renderDisposer()
+    this.disposeRenderer()
   }
 
   public show() {
@@ -58,6 +63,36 @@ export class Cursor {
 
   public hide() {
     this.visible = false
+  }
+
+  public mouseDown() {
+    this.dispatchEvent('mousedown')
+  }
+
+  public mouseUp() {
+    this.dispatchEvent('mouseup')
+  }
+
+  public click() {
+    this.dispatchEvent('click')
+  }
+
+  public dispatchEvent(type: string, options?: MouseEventInit) {
+    const mouseEvent = new MouseEvent(type, {
+      // Correct values
+      clientX: this.x,
+      clientY: this.y,
+
+      // These will be invalid (no way of generating)
+      screenX: this.x,
+      screenY: this.y,
+
+      ...options
+    })
+
+    syntheticEvents.add(mouseEvent)
+
+    this.hoveredElement.dispatchEvent(mouseEvent)
   }
 
   private render() {

@@ -1,5 +1,9 @@
-import { WindowBoundaryPlugin, SelectionPlugin } from './plugins'
 import { Cursor } from '../Cursor'
+import {
+  WindowBoundaryPlugin,
+  SelectionPlugin,
+  NativeEventsPlugin
+} from './plugins'
 
 export class Plugin {
   constructor(cursor: Cursor) {}
@@ -11,5 +15,6 @@ export class Plugin {
 
 export const defaultPlugins: (typeof Plugin)[] = [
   WindowBoundaryPlugin,
-  SelectionPlugin
+  SelectionPlugin,
+  NativeEventsPlugin
 ]
