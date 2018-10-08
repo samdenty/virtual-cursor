@@ -1,5 +1,5 @@
 import { Plugin, Cursor } from '../../..'
-import { isNodeFollowing } from './nodePosition';
+import { isNodeFollowing } from './nodePosition'
 
 export class DragSelectionPlugin implements Plugin {
   constructor(private cursor: Cursor) {}
@@ -9,14 +9,19 @@ export class DragSelectionPlugin implements Plugin {
 
   public mouseMove() {
     if (this.fromRange) {
-      const { startContainer: fromContainer, startOffset: fromOffset} = this.fromRange
-      const { startContainer: toContainer, startOffset: toOffset }= document.caretRangeFromPoint(
-        this.cursor.x,
-        this.cursor.y
-        )
+      const {
+        startContainer: fromContainer,
+        startOffset: fromOffset
+      } = this.fromRange
+      const {
+        startContainer: toContainer,
+        startOffset: toOffset
+      } = document.caretRangeFromPoint(this.cursor.x, this.cursor.y)
 
-
-      const leftToRight = (fromContainer === toContainer) ? fromOffset <= toOffset : isNodeFollowing(toContainer, fromContainer)
+      const leftToRight =
+        fromContainer === toContainer
+          ? fromOffset <= toOffset
+          : isNodeFollowing(toContainer, fromContainer)
 
       const range = new Range()
       if (leftToRight) {
@@ -30,7 +35,10 @@ export class DragSelectionPlugin implements Plugin {
       const selection = getSelection()
 
       // Don't remove selection unless we've previously selected something
-      const shouldClearSelection = this.hasPreviouslySelected || fromContainer !== toContainer || fromOffset !== toOffset
+      const shouldClearSelection =
+        this.hasPreviouslySelected ||
+        fromContainer !== toContainer ||
+        fromOffset !== toOffset
 
       if (shouldClearSelection) {
         this.hasPreviouslySelected = true

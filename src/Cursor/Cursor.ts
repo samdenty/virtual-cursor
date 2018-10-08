@@ -22,14 +22,11 @@ export class Cursor {
   public canvas = document.createElement('canvas')
   private disposeRenderer = autorun(() => this.render())
 
-  @observable
-  public visible: boolean
+  @observable public visible: boolean
 
-  @observable
-  public x: number
+  @observable public x: number
 
-  @observable
-  public y: number
+  @observable public y: number
 
   constructor({ x = 0, y = 0, visible = true } = {}) {
     this.y = y

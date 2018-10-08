@@ -1,5 +1,5 @@
 import { Plugin, Cursor } from '../../..'
-import { getClosestWord } from './getClosestWord';
+import { getClosestWord } from './getClosestWord'
 
 const MAX_CLICK_DELAY = 350
 
@@ -31,22 +31,18 @@ export class ClickSelectionPlugin implements Plugin {
       }
 
       case 2: {
-        const range = document.caretRangeFromPoint(
-          this.cursor.x,
-          this.cursor.y
-          )
-          if (!range) break
+        const range = document.caretRangeFromPoint(this.cursor.x, this.cursor.y)
+        if (!range) break
 
-          const text = range.startContainer.textContent
-          const match = getClosestWord(text, range.startOffset)
+        const text = range.startContainer.textContent
+        const match = getClosestWord(text, range.startOffset)
 
-          if (!match) break
-            range.setStart(range.startContainer, match.startIndex)
-            range.setEnd(range.endContainer, match.endIndex)
+        if (!match) break
+        range.setStart(range.startContainer, match.startIndex)
+        range.setEnd(range.endContainer, match.endIndex)
 
-            selection.removeAllRanges()
-            selection.addRange(range)
-
+        selection.removeAllRanges()
+        selection.addRange(range)
 
         break
       }
@@ -63,7 +59,6 @@ export class ClickSelectionPlugin implements Plugin {
         break
       }
     }
-
 
     this.clickTimer = setTimeout(() => {
       this.clicks = 0
