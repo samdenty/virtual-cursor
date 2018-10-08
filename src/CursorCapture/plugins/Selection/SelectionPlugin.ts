@@ -4,52 +4,38 @@ import { isNodeFollowing } from './nodePosition';
 export class SelectionPlugin implements Plugin {
   constructor(private cursor: Cursor) {}
 
-  private range: Range
-
-  private prevLeftToRight: boolean
+  private fromRange: Range
 
   public mouseMove() {
-    if (this.range) {
-      const {startContainer: currentContainer, startOffset: currentOffset} = document.caretRangeFromPoint(
+    if (this.fromRange) {
+      const { startContainer: fromContainer, startOffset: fromOffset} = this.fromRange
+      const { startContainer: toContainer, startOffset: toOffset }= document.caretRangeFromPoint(
         this.cursor.x,
         this.cursor.y
       )
 
-      // This logic is bugged, failed to debug
-      // Resets the start offset when selection nodes with different children
+      const leftToRight = (fromContainer === toContainer) ? fromOffset <= toOffset : isNodeFollowing(toContainer, fromContainer)
 
-      const startSameNode = this.range.startContainer === currentContainer
-      const endSameNode = this.range.endContainer === currentContainer
-
-      const leftToRight = (startSameNode && endSameNode) ? (this.prevLeftToRight ? this.range.startOffset : this.range.endOffset) < currentOffset : isNodeFollowing(currentContainer, this.range.startContainer)
-
+      const range = new Range()
       if (leftToRight) {
-        if (leftToRight !== this.prevLeftToRight) {
-          this.range.setStart(this.range.endContainer, this.range.endOffset)
-        }
-
-        this.range.setEnd(currentContainer, currentOffset)
+        range.setStart(fromContainer, fromOffset)
+        range.setEnd(toContainer, toOffset)
       } else {
-        if (leftToRight !== this.prevLeftToRight) {
-          this.range.setEnd(this.range.startContainer, this.range.startOffset)
-        }
-
-        this.range.setStart(currentContainer, currentOffset)
+        range.setStart(toContainer, toOffset)
+        range.setEnd(fromContainer, fromOffset)
       }
-
-      this.prevLeftToRight = leftToRight
 
       const selection = window.getSelection()
       selection.removeAllRanges()
-      selection.addRange(this.range)
+      selection.addRange(range)
     }
   }
 
   public mouseDown() {
-    this.range = document.caretRangeFromPoint(this.cursor.x, this.cursor.y)
+    this.fromRange = document.caretRangeFromPoint(this.cursor.x, this.cursor.y)
   }
 
   public mouseUp() {
-    this.range = null
+    this.fromRange = null
   }
 }
