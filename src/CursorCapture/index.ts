@@ -1,2 +1,3 @@
 export * from './CursorCapture'
-export * from './Boundary'
+export * from './Plugin'
+export * from './plugins'

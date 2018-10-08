@@ -1,39 +1,43 @@
 import autobind from 'autobind-decorator'
 import { Cursor } from '../Cursor'
-import { Boundary, defaultBoundaries } from './Boundary'
+import { Plugin, defaultPlugins } from './Plugin'
 
 export interface ICursorCapture {
   cursor?: Cursor
-  boundaries?: Boundary[]
+  plugins?: (typeof Plugin)[]
   hideWhenNotLocked?: boolean
 }
 
 @autobind
 export class CursorCapture {
-  public boundaries: Set<Boundary>
+  public plugins: Set<Plugin>
   public cursor: Cursor
   public hideWhenNotLocked: boolean
 
   constructor(
     {
       hideWhenNotLocked = true,
-      boundaries = defaultBoundaries,
+      plugins = defaultPlugins,
       cursor = new Cursor({ visible: !hideWhenNotLocked })
     }: ICursorCapture = {} as any
   ) {
+    const instantiatedPlugins = plugins.map(Plugin => new Plugin(cursor))
+    this.plugins = new Set(instantiatedPlugins)
+
     this.cursor = cursor
-    this.boundaries = new Set(boundaries)
     this.hideWhenNotLocked = hideWhenNotLocked
 
     // Event listeners
     document.addEventListener('mousemove', this.onMouseMove)
-    document.addEventListener('mousedown', this.takeControl)
+    document.addEventListener('mousedown', this.onMouseDown)
+    document.addEventListener('mouseup', this.onMouseUp)
     document.addEventListener('pointerlockchange', this.onPointerLockChange)
   }
 
   public destroy() {
     document.removeEventListener('mousemove', this.onMouseMove)
-    document.removeEventListener('mousedown', this.takeControl)
+    document.removeEventListener('mousedown', this.onMouseDown)
+    document.removeEventListener('mouseup', this.onMouseUp)
     document.removeEventListener('pointerlockchange', this.onPointerLockChange)
 
     // Give control back to user
@@ -53,6 +57,9 @@ export class CursorCapture {
   }
 
   private onMouseMove(event: MouseEvent) {
+    const prevX = this.cursor.x
+    const prevY = this.cursor.y
+
     if (event.toElement === this.cursor.canvas) {
       this.cursor.x += event.movementX
       this.cursor.y += event.movementY
@@ -61,8 +68,37 @@ export class CursorCapture {
       this.cursor.y = event.pageY
     }
 
-    // Call callbacks
-    this.boundaries.forEach(getCoords => getCoords(this.cursor))
+    // Plugin system
+    for (const plugin of this.plugins) {
+      if (!plugin.mouseMove) continue
+      const shouldCancel = plugin.mouseMove(event) === false
+
+      if (shouldCancel) {
+        this.cursor.x = prevX
+        this.cursor.y = prevY
+      }
+    }
+  }
+
+  private onMouseDown(event: MouseEvent) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    this.takeControl()
+
+    // Plugin system
+    for (const plugin of this.plugins) {
+      if (!plugin.mouseDown) continue
+      plugin.mouseDown(event)
+    }
+  }
+
+  private onMouseUp(event: MouseEvent) {
+    // Plugin system
+    for (const plugin of this.plugins) {
+      if (!plugin.mouseUp) continue
+      plugin.mouseUp(event)
+    }
   }
 
   private onPointerLockChange() {

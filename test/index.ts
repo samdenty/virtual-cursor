@@ -1,6 +1,12 @@
-import { CursorCapture } from '../src/CursorCapture'
+import { CursorCapture } from '../src'
 
 const cursorCapture = new CursorCapture({
-  boundaries: []
+  hideWhenNotLocked: false
+  // boundaries: [
+  //   ...defaultBoundaries,
+  //   cursor => {
+  //     if (cursor.hoveredElement.className === 'no') return false
+  //   }
+  // ]
 })
 ;(window as any).cursorCapture = cursorCapture

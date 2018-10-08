@@ -35,6 +35,13 @@ export class Cursor {
   }
 
   @computed
+  public get hoveredElement() {
+    const element = document.elementFromPoint(this.x, this.y)
+
+    return element
+  }
+
+  @computed
   public get type() {
     const cursor = cursorFromPoint(this.x, this.y)
 
@@ -56,18 +63,27 @@ export class Cursor {
   private render() {
     const icon = MacOS(this)
 
+    const size = zoomAdjustedSize(icon.size)
+    const padding = zoomAdjustedSize(10)
+
     const style = css`
       position: fixed;
-      height: ${zoomAdjustedSize(icon.size)}px;
-      width: ${zoomAdjustedSize(icon.size)}px;
+      pointer-events: none;
+
+      height: ${size}px;
+      width: ${size}px;
       top: ${this.y}px;
       left: ${this.x}px;
+
+      margin: -${padding};
+      padding: ${padding}px;
+
       background-image: url('${icon.url}');
+      background-origin: content-box;
       background-repeat: no-repeat;
       background-size: contain;
-      opacity: ${this.visible ? 1 : 0};
 
-      pointer-events: none;
+      opacity: ${this.visible ? 1 : 0};
 
       ${icon.style};
     `
