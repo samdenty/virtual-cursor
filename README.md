@@ -1,8 +1,8 @@
 # [virtual-cursor](https://virtual-cursor.netlify.com/)
 
-[![](https://i.imgur.com/vbYGuc9.png)](https://cursor-js.netlify.com/)
+[![](https://i.imgur.com/vbYGuc9.png)](https://virtual-cursor.netlify.com/)
 
-A cursor implemented in JavaScript [Demo](https://cursor-js.netlify.com/)
+A cursor implemented in JavaScript [Demo](https://virtual-cursor.netlify.com/)
 
 - Powerful plugin system
 - Comes with plugins that imitate native behaviour:
