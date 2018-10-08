@@ -1,4 +1,4 @@
-# [Cursor.js](https://cursor-js.netlify.com/)
+# [virtual-cursor](https://virtual-cursor.netlify.com/)
 
 [![](https://i.imgur.com/vbYGuc9.png)](https://cursor-js.netlify.com/)
 
