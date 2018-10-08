@@ -9,7 +9,8 @@
     "mobx-decorators": "^5.0.2"
   },
   "scripts": {
-    "start": "parcel serve test/index.html"
+    "start": "parcel serve test/index.html",
+    "demo": "parcel build test/index.html"
   },
   "devDependencies": {
     "parcel": "^1.10.2",
