@@ -1,10 +1,11 @@
 import { Plugin, Cursor } from '../../..'
 import { isNodeFollowing } from './nodePosition';
 
-export class SelectionPlugin implements Plugin {
+export class DragSelectionPlugin implements Plugin {
   constructor(private cursor: Cursor) {}
 
   private fromRange: Range
+  private hasPreviouslySelected: boolean
 
   public mouseMove() {
     if (this.fromRange) {
@@ -12,7 +13,8 @@ export class SelectionPlugin implements Plugin {
       const { startContainer: toContainer, startOffset: toOffset }= document.caretRangeFromPoint(
         this.cursor.x,
         this.cursor.y
-      )
+        )
+
 
       const leftToRight = (fromContainer === toContainer) ? fromOffset <= toOffset : isNodeFollowing(toContainer, fromContainer)
 
@@ -25,9 +27,17 @@ export class SelectionPlugin implements Plugin {
         range.setEnd(fromContainer, fromOffset)
       }
 
-      const selection = window.getSelection()
-      selection.removeAllRanges()
-      selection.addRange(range)
+      const selection = getSelection()
+
+      // Don't remove selection unless we've previously selected something
+      const shouldClearSelection = this.hasPreviouslySelected || fromContainer !== toContainer || fromOffset !== toOffset
+
+      if (shouldClearSelection) {
+        this.hasPreviouslySelected = true
+        selection.removeAllRanges()
+
+        selection.addRange(range)
+      }
     }
   }
 
@@ -37,5 +47,6 @@ export class SelectionPlugin implements Plugin {
 
   public mouseUp() {
     this.fromRange = null
+    this.hasPreviouslySelected = false
   }
 }

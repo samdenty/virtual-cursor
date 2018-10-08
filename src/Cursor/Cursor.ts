@@ -78,6 +78,9 @@ export class Cursor {
   }
 
   public dispatchEvent(type: string, options?: MouseEventInit) {
+    const element = this.hoveredElement
+    if (!element) return null
+
     const mouseEvent = new MouseEvent(type, {
       // Correct values
       clientX: this.x,
@@ -92,7 +95,7 @@ export class Cursor {
 
     syntheticEvents.add(mouseEvent)
 
-    this.hoveredElement.dispatchEvent(mouseEvent)
+    element.dispatchEvent(mouseEvent)
   }
 
   private render() {

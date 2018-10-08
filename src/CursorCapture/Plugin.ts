@@ -1,20 +1,22 @@
 import { Cursor } from '../Cursor'
 import {
   WindowBoundaryPlugin,
-  SelectionPlugin,
-  NativeEventsPlugin
+  DragSelectionPlugin,
+  NativeEventsPlugin,
+  ClickSelectionPlugin
 } from './plugins'
 
 export class Plugin {
   constructor(cursor: Cursor) {}
 
-  mouseMove?(event: MouseEvent): boolean | void
-  mouseDown?(event: MouseEvent): void
-  mouseUp?(event: MouseEvent): void
+  mouseMove?(): boolean | void
+  mouseDown?(): void
+  mouseUp?(): void
 }
 
 export const defaultPlugins: (typeof Plugin)[] = [
   WindowBoundaryPlugin,
-  SelectionPlugin,
+  DragSelectionPlugin,
+  ClickSelectionPlugin,
   NativeEventsPlugin
 ]

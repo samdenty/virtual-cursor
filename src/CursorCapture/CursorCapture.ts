@@ -74,7 +74,7 @@ export class CursorCapture {
     // Plugin system
     for (const plugin of this.plugins) {
       if (!plugin.mouseMove) continue
-      const shouldCancel = plugin.mouseMove(event) === false
+      const shouldCancel = plugin.mouseMove() === false
 
       if (shouldCancel) {
         this.cursor.x = prevX
@@ -94,7 +94,7 @@ export class CursorCapture {
     // Plugin system
     for (const plugin of this.plugins) {
       if (!plugin.mouseDown) continue
-      plugin.mouseDown(event)
+      plugin.mouseDown()
     }
   }
 
@@ -104,7 +104,7 @@ export class CursorCapture {
     // Plugin system
     for (const plugin of this.plugins) {
       if (!plugin.mouseUp) continue
-      plugin.mouseUp(event)
+      plugin.mouseUp()
     }
   }
 
