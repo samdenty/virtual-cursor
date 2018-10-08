@@ -64,8 +64,8 @@ export class CursorCapture {
     const prevY = this.cursor.y
 
     if (event.toElement === this.cursor.canvas) {
-      this.cursor.x += event.movementX
-      this.cursor.y += event.movementY
+      this.cursor.x += event.movementX / window.devicePixelRatio
+      this.cursor.y += event.movementY / window.devicePixelRatio
     } else {
       this.cursor.x = event.pageX
       this.cursor.y = event.pageY

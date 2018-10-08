@@ -34,6 +34,7 @@ export class Cursor {
     this.visible = visible
 
     document.body.appendChild(this.canvas)
+    window.addEventListener('resize', this.render)
   }
 
   @computed
@@ -52,6 +53,7 @@ export class Cursor {
 
   public destroy() {
     this.disposeRenderer()
+    window.removeEventListener('resize', this.render)
   }
 
   public show() {
