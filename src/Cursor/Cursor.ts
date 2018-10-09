@@ -1,131 +1,97 @@
-import { observable, autorun, computed } from 'mobx'
-
-import { MacOS } from '../cursors'
-import {
-  css,
-  cursorFromPoint,
-  zoomAdjustedSize,
-  syntheticEvents
-} from '../utils'
 import autobind from 'autobind-decorator'
+import { Pointer } from '../Pointer'
+import { Plugin, defaultPlugins } from './Plugin'
+import { isValidEvent } from '../utils'
 
-export type CursorIcon = (
-  cursor: Cursor
-) => {
-  url: string
-  size: number
-  style?: string
+export interface ICursorCapture {
+  pointer?: Pointer
+  plugins?: (typeof Plugin)[]
 }
 
 @autobind
 export class Cursor {
-  public canvas = document.createElement('canvas')
-  private disposeRenderer = autorun(() => this.render())
+  public plugins: Set<Plugin>
+  public cursor: Pointer
 
-  @observable public visible: boolean
+  constructor(
+    {
+      plugins = defaultPlugins,
+      pointer = new Pointer()
+    }: ICursorCapture = {} as any
+  ) {
+    const instantiatedPlugins = plugins.map(Plugin => new Plugin(pointer))
 
-  @observable public x: number
+    this.plugins = new Set(instantiatedPlugins)
+    this.cursor = pointer
 
-  @observable public y: number
-
-  constructor({ x = 0, y = 0, visible = true } = {}) {
-    this.y = y
-    this.x = x
-    this.visible = visible
-
-    document.body.appendChild(this.canvas)
-    window.addEventListener('resize', this.render)
+    // Event listeners
+    document.addEventListener('mousemove', this.onMouseMove)
+    document.addEventListener('mousedown', this.onMouseDown)
+    document.addEventListener('mouseup', this.onMouseUp)
   }
 
-  @computed
-  public get hoveredElement() {
-    const element = document.elementFromPoint(this.x, this.y)
+  public cleanup() {
+    document.removeEventListener('mousemove', this.onMouseMove)
+    document.removeEventListener('mousedown', this.onMouseDown)
+    document.removeEventListener('mouseup', this.onMouseUp)
 
-    return element
+    // Give control back to user
+    this.ceaseControl()
+    this.cursor.cleanup()
   }
 
-  @computed
-  public get type() {
-    const cursor = cursorFromPoint(this.x, this.y)
-
-    return cursor
+  public ceaseControl() {
+    // Only exit current canvas
+    if (document.pointerLockElement === this.cursor.canvas)
+      document.exitPointerLock()
   }
 
-  public destroy() {
-    this.disposeRenderer()
-    window.removeEventListener('resize', this.render)
+  private onMouseMove(event: MouseEvent) {
+    if (!isValidEvent(event)) return
+
+    const prevX = this.cursor.x
+    const prevY = this.cursor.y
+
+    if (event.toElement === this.cursor.canvas) {
+      this.cursor.x += event.movementX / window.devicePixelRatio
+      this.cursor.y += event.movementY / window.devicePixelRatio
+    } else {
+      this.cursor.x = event.pageX
+      this.cursor.y = event.pageY
+    }
+
+    // Plugin system
+    for (const plugin of this.plugins) {
+      if (!plugin.mouseMove) continue
+      const shouldCancel = plugin.mouseMove() === false
+
+      if (shouldCancel) {
+        this.cursor.x = prevX
+        this.cursor.y = prevY
+      }
+    }
   }
 
-  public show() {
-    this.visible = true
+  private onMouseDown(event: MouseEvent) {
+    if (!isValidEvent(event)) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    // Plugin system
+    for (const plugin of this.plugins) {
+      if (!plugin.mouseDown) continue
+      plugin.mouseDown()
+    }
   }
 
-  public hide() {
-    this.visible = false
-  }
+  private onMouseUp(event: MouseEvent) {
+    if (!isValidEvent(event)) return
 
-  public mouseDown() {
-    this.dispatchEvent('mousedown')
-  }
-
-  public mouseUp() {
-    this.dispatchEvent('mouseup')
-  }
-
-  public click() {
-    this.dispatchEvent('click')
-  }
-
-  public dispatchEvent(type: string, options?: MouseEventInit) {
-    const element = this.hoveredElement
-    if (!element) return null
-
-    const mouseEvent = new MouseEvent(type, {
-      // Correct values
-      clientX: this.x,
-      clientY: this.y,
-
-      // These will be invalid (no way of generating)
-      screenX: this.x,
-      screenY: this.y,
-
-      ...options
-    })
-
-    syntheticEvents.add(mouseEvent)
-
-    element.dispatchEvent(mouseEvent)
-  }
-
-  private render() {
-    const icon = MacOS(this)
-
-    const size = zoomAdjustedSize(icon.size)
-    const padding = zoomAdjustedSize(10)
-
-    const style = css`
-      position: fixed;
-      pointer-events: none;
-
-      height: ${size}px;
-      width: ${size}px;
-      top: ${this.y}px;
-      left: ${this.x}px;
-
-      margin: -${padding};
-      padding: ${padding}px;
-
-      background-image: url('${icon.url}');
-      background-origin: content-box;
-      background-repeat: no-repeat;
-      background-size: contain;
-
-      opacity: ${this.visible ? 1 : 0};
-
-      ${icon.style};
-    `
-
-    // Apply styles
-    ;(this.canvas.style as any) = style
+    // Plugin system
+    for (const plugin of this.plugins) {
+      if (!plugin.mouseUp) continue
+      plugin.mouseUp()
+    }
   }
 }

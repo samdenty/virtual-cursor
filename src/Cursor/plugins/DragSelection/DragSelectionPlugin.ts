@@ -1,8 +1,8 @@
-import { Plugin, Cursor } from '../../..'
+import { Plugin, Pointer} from '../../..'
 import { isNodeFollowing } from './nodePosition'
 
 export class DragSelectionPlugin implements Plugin {
-  constructor(private cursor: Cursor) {}
+  constructor(private pointer: Pointer) {}
 
   private fromRange: Range
   private hasPreviouslySelected: boolean
@@ -16,7 +16,7 @@ export class DragSelectionPlugin implements Plugin {
       const {
         startContainer: toContainer,
         startOffset: toOffset
-      } = document.caretRangeFromPoint(this.cursor.x, this.cursor.y)
+      } = document.caretRangeFromPoint(this.pointer.x, this.pointer.y)
 
       const leftToRight =
         fromContainer === toContainer
@@ -50,7 +50,7 @@ export class DragSelectionPlugin implements Plugin {
   }
 
   public mouseDown() {
-    this.fromRange = document.caretRangeFromPoint(this.cursor.x, this.cursor.y)
+    this.fromRange = document.caretRangeFromPoint(this.pointer.x, this.pointer.y)
   }
 
   public mouseUp() {

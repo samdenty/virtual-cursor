@@ -1,4 +1,4 @@
-import { Cursor } from '../Cursor'
+import { Pointer } from '../Pointer'
 import {
   WindowBoundaryPlugin,
   DragSelectionPlugin,
@@ -7,11 +7,13 @@ import {
 } from './plugins'
 
 export class Plugin {
-  constructor(cursor: Cursor) {}
+  constructor(pointer: Pointer) {}
 
   mouseMove?(): boolean | void
   mouseDown?(): void
   mouseUp?(): void
+
+  cleanup?(): void
 }
 
 export const defaultPlugins: (typeof Plugin)[] = [
