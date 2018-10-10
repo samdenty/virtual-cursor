@@ -1,3 +1,4 @@
+import { ContentRect } from 'resize-observer/lib/ContentRect'
 import { observable, autorun, computed } from 'mobx'
 
 import { MacOS } from '../cursors'
@@ -23,9 +24,12 @@ export class Cursor {
   private autorunners = new Array<Function>()
   public plugins = new Set<Plugin>()
 
+  public pointer = document.createElement('canvas')
+  public node = document.createElement('div')
+
+  @observable
+  public rootRect: ContentRect
   public root: HTMLElement
-  public canvas = document.createElement('canvas')
-  public overlay = document.createElement('div')
 
   @observable
   public locked: boolean
@@ -40,16 +44,23 @@ export class Cursor {
   public y = 0
 
   constructor({
-    root = document.body,
+    root = document.documentElement,
     plugins = defaultPlugins
   }: ICursor = {}) {
     this.root = root
+    this.rootRect = root.getBoundingClientRect()
 
-    root.appendChild(this.canvas)
-    root.appendChild(this.overlay)
+    this.node.appendChild(this.pointer)
+    document.body.appendChild(this.node)
+
+    const updateRect = setInterval(this.updateRect, 100)
 
     // Autorunners
-    this.autorunners.push(autorun(this.render))
+    this.autorunners.push(
+      autorun(this.renderPointer),
+      autorun(this.renderNode),
+      () => clearInterval(updateRect)
+    )
 
     // Initiate plugins
     for (const Plugin of plugins) {
@@ -60,13 +71,13 @@ export class Cursor {
     }
 
     // Add event listeners
-    window.addEventListener('resize', this.render)
+    window.addEventListener('resize', this.renderPointer)
     document.addEventListener('pointerlockchange', this.onPointerLockChange)
   }
 
   public cleanup() {
     // Remove event listeners
-    window.removeEventListener('resize', this.render)
+    window.removeEventListener('resize', this.renderPointer)
     document.removeEventListener('pointerlockchange', this.onPointerLockChange)
 
     // Call plugin cleanup methods
@@ -81,48 +92,43 @@ export class Cursor {
     }
   }
 
-  public suppressOverlay(callback: Function) {
-    const prevHidden = this.overlay.hidden
+  public getPageX = (x = this.x) => this.rootRect.left + x
+  public getPageY = (y = this.y) => this.rootRect.top + y
 
-    try {
-      this.overlay.hidden = true
-      return callback()
-    } finally {
-      this.overlay.hidden = prevHidden
-    }
+  public lock = () => this.pointer.requestPointerLock()
+  public unlock = () => this.locked && document.exitPointerLock()
+
+  public show = () => (this.visible = true)
+  public hide = () => (this.visible = false)
+
+  public caretRange(x = this.x, y = this.y) {
+    const range = this.suppressOverlay(() =>
+      document.caretRangeFromPoint(this.getPageX(x), this.getPageY(y))
+    )
+
+    return range
   }
 
   @computed
   public get hoveredElement() {
-    const element = this.suppressOverlay(() =>
-      document.elementFromPoint(this.x, this.y)
-    )
+    const element =
+      this.suppressOverlay(() =>
+        document.elementFromPoint(this.getPageX(), this.getPageY())
+      ) || this.root
 
     return element
   }
 
   @computed
   public get type() {
-    const cursor = this.suppressOverlay(() => cursorFromPoint(this.x, this.y))
+    const cursor = this.suppressOverlay(() =>
+      cursorFromPoint(this.getPageX(), this.getPageY())
+    )
 
     return cursor
   }
 
-  public lock() {
-    this.canvas.requestPointerLock()
-  }
-
-  public unlock() {
-    // Only exit current canvas
-    if (document.pointerLockElement === this.canvas) {
-      document.exitPointerLock()
-    }
-  }
-
-  public show = () => (this.visible = true)
-  public hide = () => (this.visible = false)
-
-  public setPosition(x: number, y: number, dispatch = true) {
+  public setPosition(x: number, y: number) {
     this.x = x
     this.y = y
 
@@ -130,48 +136,38 @@ export class Cursor {
 
     for (const plugin of this.plugins) {
       if (!plugin.mouseMove) continue
-      plugin.mouseMove({ ...event })
+      plugin.mouseMove(event)
     }
-
-    if (dispatch) event.dispatch()
   }
 
-  public mouseDown(dispatch = true) {
+  public mouseDown() {
     const event = this.createEvent('mousedown')
 
     for (const plugin of this.plugins) {
       if (!plugin.mouseDown) continue
-      plugin.mouseDown({ ...event })
+      plugin.mouseDown(event)
     }
-
-    if (dispatch) event.dispatch()
   }
 
-  public mouseUp(dispatch = true) {
+  public mouseUp() {
     const event = this.createEvent('mouseup')
 
     for (const plugin of this.plugins) {
       if (!plugin.mouseUp) continue
-      plugin.mouseUp({ ...event })
+      plugin.mouseUp(event)
     }
-
-    if (dispatch) event.dispatch()
   }
 
-  public click(dispatch = true) {
+  public click() {
     const event = this.createEvent('click')
 
     for (const plugin of this.plugins) {
       if (!plugin.click) continue
-      plugin.click({ ...event })
+      plugin.click(event)
     }
-
-    if (dispatch) event.dispatch()
   }
 
   public createEvent(type: string, options?: MouseEventInit) {
-    const element = this.hoveredElement || document
-
     const event = new MouseEvent(type, {
       // Correct values
       clientX: this.x,
@@ -186,56 +182,35 @@ export class Cursor {
 
     syntheticEvents.add(event)
 
-    return {
-      event,
-      element,
-      dispatch() {
-        element.dispatchEvent(event)
-      }
-    }
+    return event
   }
 
-  private onPointerLockChange() {
-    const locked = document.pointerLockElement === this.canvas
-
-    this.locked = locked
-    this.overlay.hidden = locked
-  }
-
-  private render() {
-    const zIndex = 9999999
-    const icon = MacOS(this)
-
-    const size = zoomAdjustedSize(icon.size)
-    const padding = zoomAdjustedSize(10)
-
-    // Mask styles
-    ;(this.overlay.style as any) = css`
-      position: absolute;
-      z-index: ${zIndex};
+  private renderNode() {
+    ;(this.node.style as any) = css`
+      position: fixed;
       cursor: none;
+      z-index: 99999999;
 
-      top: 0;
-      left: 0;
-      right: 0;
-
-      height: 100%;
-      width: 100%;
+      top: ${this.rootRect.top};
+      left: ${this.rootRect.left};
+      height: ${this.rootRect.height};
+      width: ${this.rootRect.width};
     `
+  }
+
+  private renderPointer() {
+    const icon = MacOS(this)
+    const size = zoomAdjustedSize(icon.size)
 
     // Canvas styles
-    ;(this.canvas.style as any) = css`
-      position: fixed;
-      z-index: ${zIndex + 1};
+    ;(this.pointer.style as any) = css`
+      position: absolute;
       pointer-events: none;
 
       height: ${size}px;
       width: ${size}px;
       top: ${this.y}px;
       left: ${this.x}px;
-
-      margin: -${padding};
-      padding: ${padding}px;
 
       background-image: url('${icon.url}');
       background-origin: content-box;
@@ -246,5 +221,35 @@ export class Cursor {
 
       ${icon.style};
     `
+  }
+
+  private suppressOverlay<T extends () => any>(callback: T): ReturnType<T> {
+    const prevState = this.node.style.pointerEvents
+
+    try {
+      this.node.style.pointerEvents = 'none'
+      return callback()
+    } finally {
+      this.node.style.pointerEvents = prevState
+    }
+  }
+
+  private updateRect() {
+    const rect = this.root.getBoundingClientRect()
+
+    if (
+      this.rootRect.top !== rect.top ||
+      this.rootRect.left !== rect.left ||
+      this.rootRect.height !== rect.height ||
+      this.rootRect.width !== rect.width
+    ) {
+      this.rootRect = rect
+    }
+  }
+
+  private onPointerLockChange() {
+    const locked = document.pointerLockElement === this.pointer
+
+    this.locked = locked
   }
 }

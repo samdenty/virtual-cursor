@@ -8,9 +8,7 @@ export class DragSelectionPlugin implements Plugin {
   private hasPreviouslySelected: boolean
 
   private getCaret(x = this.cursor.x, y = this.cursor.y, recurse = true) {
-    const range = this.cursor.suppressOverlay(() =>
-      document.caretRangeFromPoint(x, y)
-    )
+    const range = this.cursor.caretRange(x, y)
 
     // Cursor isn't on a HTML element, look around for one
     if (recurse && !range) {

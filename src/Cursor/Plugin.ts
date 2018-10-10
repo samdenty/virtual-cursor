@@ -8,19 +8,13 @@ import {
   PointerLockPlugin
 } from './plugins'
 
-export type PluginMouseEvent = {
-  event: MouseEvent
-  dispatch: Function
-  element: Element
-}
-
 export class Plugin {
   constructor(cursor: Cursor) {}
 
-  mouseMove?(event: PluginMouseEvent): boolean | void
-  mouseDown?(event: PluginMouseEvent): void
-  click?(event: PluginMouseEvent): void
-  mouseUp?(event: PluginMouseEvent): void
+  mouseMove?(event: MouseEvent): boolean | void
+  mouseDown?(event: MouseEvent): void
+  click?(event: MouseEvent): void
+  mouseUp?(event: MouseEvent): void
 
   render?(): void
   cleanup?(): void

@@ -6,16 +6,17 @@
   "dependencies": {
     "autobind-decorator": "^2.1.0",
     "mobx": "^5.5.0",
-    "mobx-decorators": "^5.0.2"
+    "mobx-decorators": "^5.0.2",
+    "resize-observer": "^1.0.0-alpha.1"
   },
   "scripts": {
     "start": "parcel serve test/index.html",
     "demo": "parcel build test/index.html"
   },
   "devDependencies": {
-    "parcel": "^1.10.2",
-    "typescript": "^3.1.1",
     "@types/autobind-decorator": "^2.1.0",
-    "@types/node": "^10.11.4"
+    "@types/node": "^10.11.4",
+    "parcel": "^1.10.2",
+    "typescript": "^3.1.1"
   }
 }

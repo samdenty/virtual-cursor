@@ -31,9 +31,7 @@ export class ClickSelectionPlugin implements Plugin {
       }
 
       case 2: {
-        const range = this.cursor.suppressOverlay(() =>
-          document.caretRangeFromPoint(this.cursor.x, this.cursor.y)
-        )
+        const range = this.cursor.caretRange()
         if (!range) break
 
         const text = range.startContainer.textContent

@@ -7,35 +7,7 @@ import {
   UserInputPlugin,
   NativeEventsPlugin
 } from '../src'
-/*
 
-
-
-
-
-
-
-
-
-
-overlay should be handled in UserInputPlugin, or seperate plugin
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-*/
 class MouseStorage implements Plugin {
   constructor(private cursor: Cursor) {
     const restored = localStorage.getItem('mouse')
@@ -58,14 +30,14 @@ class MouseStorage implements Plugin {
 
 class AutoMove implements Plugin {
   constructor(private cursor: Cursor) {
-    setInterval(() => this.cursor.setPosition(this.cursor.x + 1, this.cursor.y))
+    // setInterval(() => this.cursor.setPosition(this.cursor.x + 1, this.cursor.y))
   }
 
   public mouseMove() {
     const top = 0
-    const bottom = window.innerHeight
+    const bottom = this.cursor.rootRect.height
     const left = 0
-    const right = window.innerWidth
+    const right = this.cursor.rootRect.width
 
     const atTop = this.cursor.y <= top
     const atBottom = this.cursor.y >= bottom
@@ -88,6 +60,7 @@ class AutoMove implements Plugin {
 }
 
 const cursorCapture = new Cursor({
+  root: document.querySelector('.root'),
   plugins: [
     PointerLockPlugin,
     DragSelectionPlugin,
