@@ -1,7 +1,6 @@
 import { Plugin, Cursor } from '../../..'
 import autobind from 'autobind-decorator'
 
-@autobind
 export class WindowBoundaryPlugin implements Plugin {
   constructor(private cursor: Cursor) {}
 

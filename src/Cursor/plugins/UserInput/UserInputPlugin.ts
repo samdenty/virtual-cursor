@@ -20,6 +20,8 @@ export class UserInputPlugin implements Plugin {
   private handleMouseMove(event: MouseEvent) {
     if (!isValidEvent(event)) return
 
+    event.stopPropagation()
+
     if (event.toElement === this.cursor.canvas) {
       const x = this.cursor.x + event.movementX / window.devicePixelRatio
       const y = this.cursor.y + event.movementY / window.devicePixelRatio
