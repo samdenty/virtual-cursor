@@ -4,7 +4,8 @@ import {
   DragSelectionPlugin,
   ClickSelectionPlugin,
   UserInputPlugin,
-  NativeEventsPlugin
+  NativeEventsPlugin,
+  PointerLockPlugin
 } from './plugins'
 
 export type PluginMouseEvent = {
@@ -26,6 +27,7 @@ export class Plugin {
 }
 
 export const defaultPlugins: (typeof Plugin)[] = [
+  PointerLockPlugin,
   WindowBoundaryPlugin,
   DragSelectionPlugin,
   ClickSelectionPlugin,
