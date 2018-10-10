@@ -10,122 +10,159 @@ import {
 import autobind from 'autobind-decorator'
 
 export type PointerIcon = (
-  cursor: Pointer
+  cursor: any
 ) => {
   url: string
   size: number
   style?: string
 }
 
-@autobind
-export class Pointer {
-  public canvas = document.createElement('canvas')
-  private disposeRenderer = autorun(() => this.render())
+// @autobind
+// export class Pointer {
+//   public canvas = document.createElement('canvas')
+//   public mask = document.createElement('div')
 
-  @observable public visible: boolean
+//   @observable
+//   public locked: boolean
 
-  @observable public x: number
+//   @observable
+//   public visible: boolean
 
-  @observable public y: number
+//   @observable
+//   public x: number
 
-  constructor({ x = 0, y = 0, visible = true } = {}) {
-    this.y = y
-    this.x = x
-    this.visible = visible
+//   @observable
+//   public y: number
 
-    document.body.appendChild(this.canvas)
-    window.addEventListener('resize', this.render)
-  }
+//   private disposeRenderer = autorun(() => this.render())
 
-  @computed
-  public get hoveredElement() {
-    const element = document.elementFromPoint(this.x, this.y)
+//   constructor({ x = 0, y = 0, visible = true } = {}) {
+//     const root = document.body
 
-    return element
-  }
+//     this.y = y
+//     this.x = x
+//     this.visible = visible
 
-  @computed
-  public get type() {
-    const cursor = cursorFromPoint(this.x, this.y)
+//     root.appendChild(this.canvas)
+//     root.appendChild(this.mask)
 
-    return cursor
-  }
+//     window.addEventListener('resize', this.render)
+//     document.addEventListener('pointerlockchange', this.onPointerLockChange)
+//   }
 
-  public cleanup() {
-    this.disposeRenderer()
-    window.removeEventListener('resize', this.render)
-  }
+//   public cleanup() {
+//     this.disposeRenderer()
 
-  public show() {
-    this.visible = true
-  }
+//     window.removeEventListener('resize', this.render)
+//     document.removeEventListener('pointerlockchange', this.onPointerLockChange)
+//   }
 
-  public hide() {
-    this.visible = false
-  }
+//   @computed
+//   public get hoveredElement() {
+//     this.mask.hidden = true
+//     const element = document.elementFromPoint(this.x, this.y)
+//     this.mask.hidden = false
 
-  public mouseDown() {
-    this.dispatchEvent('mousedown')
-  }
+//     return element
+//   }
 
-  public mouseUp() {
-    this.dispatchEvent('mouseup')
-  }
+//   @computed
+//   public get type() {
+//     this.mask.hidden = true
+//     const cursor = cursorFromPoint(this.x, this.y)
+//     this.mask.hidden = false
 
-  public click() {
-    this.dispatchEvent('click')
-  }
+//     return cursor
+//   }
 
-  public dispatchEvent(type: string, options?: MouseEventInit) {
-    const element = this.hoveredElement
-    if (!element) return null
+//   public isLocked() {}
 
-    const mouseEvent = new MouseEvent(type, {
-      // Correct values
-      clientX: this.x,
-      clientY: this.y,
+//   public lock() {
+//     this.canvas.requestPointerLock()
+//   }
 
-      // These will be invalid (no way of generating)
-      screenX: this.x,
-      screenY: this.y,
+//   public unlock() {
+//     // Only exit current canvas
+//     if (document.pointerLockElement === this.canvas) {
+//       document.exitPointerLock()
+//     }
+//   }
 
-      ...options
-    })
+//   public show = () => (this.visible = true)
+//   public hide = () => (this.visible = false)
+//   public mouseDown = () => this.dispatchEvent('mousedown')
+//   public mouseUp = () => this.dispatchEvent('mouseup')
+//   public click = () => this.dispatchEvent('click')
 
-    syntheticEvents.add(mouseEvent)
+//   public dispatchEvent(type: string, options?: MouseEventInit) {
+//     const element = this.hoveredElement
+//     if (!element) return null
 
-    element.dispatchEvent(mouseEvent)
-  }
+//     const mouseEvent = new MouseEvent(type, {
+//       // Correct values
+//       clientX: this.x,
+//       clientY: this.y,
 
-  private render() {
-    const icon = MacOS(this)
+//       // These will be invalid (no way of generating)
+//       screenX: this.x,
+//       screenY: this.y,
 
-    const size = zoomAdjustedSize(icon.size)
-    const padding = zoomAdjustedSize(10)
+//       ...options
+//     })
 
-    const style = css`
-      position: fixed;
-      pointer-events: none;
+//     syntheticEvents.add(mouseEvent)
 
-      height: ${size}px;
-      width: ${size}px;
-      top: ${this.y}px;
-      left: ${this.x}px;
+//     element.dispatchEvent(mouseEvent)
+//   }
 
-      margin: -${padding};
-      padding: ${padding}px;
+//   private onPointerLockChange() {
+//     const locked = document.pointerLockElement === this.canvas
+//     this.locked = locked
+//   }
 
-      background-image: url('${icon.url}');
-      background-origin: content-box;
-      background-repeat: no-repeat;
-      background-size: contain;
+//   private render() {
+//     const zIndex = 9999999
+//     const icon = MacOS(this)
 
-      opacity: ${this.visible ? 1 : 0};
+//     const size = zoomAdjustedSize(icon.size)
+//     const padding = zoomAdjustedSize(10)
 
-      ${icon.style};
-    `
+//     // Mask styles
+//     ;(this.mask.style as any) = css`
+//       position: absolute;
+//       z-index: ${zIndex};
+//       cursor: none;
 
-    // Apply styles
-    ;(this.canvas.style as any) = style
-  }
-}
+//       top: 0;
+//       left: 0;
+//       right: 0;
+
+//       height: 100%;
+//       width: 100%;
+//     `
+
+//     // Canvas styles
+//     ;(this.canvas.style as any) = css`
+//       position: fixed;
+//       z-index: ${zIndex + 1};
+//       pointer-events: none;
+
+//       height: ${size}px;
+//       width: ${size}px;
+//       top: ${this.y}px;
+//       left: ${this.x}px;
+
+//       margin: -${padding};
+//       padding: ${padding}px;
+
+//       background-image: url('${icon.url}');
+//       background-origin: content-box;
+//       background-repeat: no-repeat;
+//       background-size: contain;
+
+//       opacity: ${this.visible ? 1 : 0};
+
+//       ${icon.style};
+//     `
+//   }
+// }

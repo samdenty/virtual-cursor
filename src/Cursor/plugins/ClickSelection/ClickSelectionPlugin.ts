@@ -1,10 +1,10 @@
-import { Plugin, Pointer} from '../../..'
+import { Plugin, Cursor } from '../../..'
 import { getClosestWord } from './getClosestWord'
 
 const MAX_CLICK_DELAY = 350
 
 export class ClickSelectionPlugin implements Plugin {
-  constructor(private pointer: Pointer) {}
+  constructor(private cursor: Cursor) {}
 
   private clickTimer: any
   private clickElement: Element
@@ -17,7 +17,7 @@ export class ClickSelectionPlugin implements Plugin {
   private addClick() {
     clearTimeout(this.clickTimer)
 
-    const element = this.pointer.hoveredElement
+    const element = this.cursor.hoveredElement
     if (this.clickElement !== element) this.clicks = 0
     this.clickElement = element
 
@@ -31,7 +31,9 @@ export class ClickSelectionPlugin implements Plugin {
       }
 
       case 2: {
-        const range = document.caretRangeFromPoint(this.pointer.x, this.pointer.y)
+        const range = this.cursor.suppressOverlay(() =>
+          document.caretRangeFromPoint(this.cursor.x, this.cursor.y)
+        )
         if (!range) break
 
         const text = range.startContainer.textContent

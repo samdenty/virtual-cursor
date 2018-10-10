@@ -1,34 +1,26 @@
-import { Cursor, Plugin, Pointer } from '../src'
+import { Plugin, Cursor } from '../src'
 
-const cursorCapture = new Cursor({
-  hideWhenNotLocked: false
-  // boundaries: [
-  //   ...defaultBoundaries,
-  //   cursor => {
-  //     if (cursor.hoveredElement.className === 'no') return false
-  //   }
-  // ]
-})
+const cursorCapture = new Cursor({})
 
 class MouseStorage implements Plugin {
-  constructor(private pointer: Pointer) {
+  constructor(private cursor: Cursor) {
     const restored = localStorage.getItem('mouse')
 
     if (restored) {
       const json = JSON.parse(restored)
 
-      pointer.x = json.x
-      pointer.y = json.y
+      cursor.x = json.x
+      cursor.y = json.y
     }
   }
 
   public mouseMove() {
     localStorage.setItem(
       'mouse',
-      JSON.stringify({ x: this.pointer.x, y: this.pointer.y })
+      JSON.stringify({ x: this.cursor.x, y: this.cursor.y })
     )
   }
 }
 
-cursorCapture.plugins.add(new MouseStorage(cursorCapture.cursor))
+cursorCapture.plugins.add(new MouseStorage(cursorCapture))
 ;(window as any).cursorCapture = cursorCapture

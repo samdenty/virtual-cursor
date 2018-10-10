@@ -1,42 +1,25 @@
-import { Plugin, Pointer } from '../../..'
-import autobind from 'autobind-decorator';
+import { Plugin, Cursor } from '../../..'
+import autobind from 'autobind-decorator'
 
 @autobind
 export class WindowBoundaryPlugin implements Plugin {
-  constructor(private pointer: Pointer) {
-    document.addEventListener('pointerlockchange', this.onPointerLockChange)
-
-    this.onPointerLockChange()
+  constructor(private cursor: Cursor) {
+    this.cursor.lock()
   }
 
   public cleanup() {
-    document.removeEventListener('pointerlockchange', this.onPointerLockChange)
+    this.cursor.unlock()
   }
 
   public mouseMove() {
-    if (this.pointer.x < 0) this.pointer.x = 0
-    if (this.pointer.y < 0) this.pointer.y = 0
+    if (this.cursor.x < 0) this.cursor.x = 0
+    if (this.cursor.y < 0) this.cursor.y = 0
 
-    if (this.pointer.x >= window.innerWidth) this.pointer.x = window.innerWidth
-    if (this.pointer.y >= window.innerHeight) this.pointer.y = window.innerHeight
+    if (this.cursor.x >= window.innerWidth) this.cursor.x = window.innerWidth
+    if (this.cursor.y >= window.innerHeight) this.cursor.y = window.innerHeight
   }
 
   public mouseDown() {
-    this.takeControl()
-  }
-
-  public takeControl() {
-    this.pointer.canvas.requestPointerLock()
-    this.onPointerLockChange()
-  }
-
-  private onPointerLockChange() {
-    const locked = document.pointerLockElement === this.pointer.canvas
-
-    if (locked) {
-      this.pointer.show()
-    } else {
-       this.pointer.hide()
-    }
+    this.cursor.lock()
   }
 }

@@ -1,23 +1,27 @@
-import { Plugin, Pointer} from '../../..'
+import { Plugin, PluginMouseEvent, Cursor } from '../../..'
 
 export class NativeEventsPlugin implements Plugin {
-  constructor(private pointer: Pointer) {}
+  constructor(private cursor: Cursor) {}
 
   private startElement: Element
 
-  public mouseUp() {
-    const element = this.pointer.hoveredElement
-
-    if (this.startElement === element) this.pointer.click()
-    this.startElement = null
-
-    this.pointer.mouseUp()
+  public mouseMove({ dispatch }: PluginMouseEvent) {
+    dispatch()
   }
 
-  public mouseDown() {
-    const element = this.pointer.hoveredElement
+  public mouseUp({ dispatch }: PluginMouseEvent) {
+    const element = this.cursor.hoveredElement
+
+    if (this.startElement === element) this.cursor.click()
+    this.startElement = null
+
+    dispatch()
+  }
+
+  public mouseDown({ dispatch }: PluginMouseEvent) {
+    const element = this.cursor.hoveredElement
     this.startElement = element
 
-    this.pointer.mouseDown()
+    dispatch()
   }
 }

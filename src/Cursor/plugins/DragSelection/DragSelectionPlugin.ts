@@ -1,22 +1,39 @@
-import { Plugin, Pointer} from '../../..'
+import { Plugin, Cursor } from '../../..'
 import { isNodeFollowing } from './nodePosition'
 
 export class DragSelectionPlugin implements Plugin {
-  constructor(private pointer: Pointer) {}
+  constructor(private cursor: Cursor) {}
 
   private fromRange: Range
   private hasPreviouslySelected: boolean
 
+  private getCaret(x = this.cursor.x, y = this.cursor.y, recurse = true) {
+    const range = this.cursor.suppressOverlay(() =>
+      document.caretRangeFromPoint(x, y)
+    )
+
+    // Cursor isn't on a HTML element, look around for one
+    if (recurse && !range) {
+      const tadLeft = this.getCaret(x - 1, y - 1, false)
+      if (tadLeft) return tadLeft
+
+      const tadRight = this.getCaret(x + 1, y + 1, false)
+      if (tadRight) return tadRight
+    }
+
+    return range
+  }
+
   public mouseMove() {
     if (this.fromRange) {
+      const toRange = this.getCaret()
+      if (!toRange) return
+
+      const { startContainer: toContainer, startOffset: toOffset } = toRange
       const {
         startContainer: fromContainer,
         startOffset: fromOffset
       } = this.fromRange
-      const {
-        startContainer: toContainer,
-        startOffset: toOffset
-      } = document.caretRangeFromPoint(this.pointer.x, this.pointer.y)
 
       const leftToRight =
         fromContainer === toContainer
@@ -50,7 +67,7 @@ export class DragSelectionPlugin implements Plugin {
   }
 
   public mouseDown() {
-    this.fromRange = document.caretRangeFromPoint(this.pointer.x, this.pointer.y)
+    this.fromRange = this.getCaret()
   }
 
   public mouseUp() {
